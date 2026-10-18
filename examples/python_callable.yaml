@@ -1,0 +1,8 @@
+# Scan a function in your own code. `my_app.py:answer(message, documents=None)` may return a str,
+# a dict ({"text": ..., "tool_calls": [...]}) or a promptshield TargetResponse.
+target:
+  type: callable
+  name: my-python-app
+  callable: my_app.py:answer      # path is relative to this config file
+
+canary: PSHIELD-CANARY-CHANGE-ME-5b81e0
