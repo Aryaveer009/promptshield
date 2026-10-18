@@ -1,0 +1,109 @@
+"""Build docs/index.html, the landing page for the GitHub Pages site, from the real demo results.
+
+    promptshield demo --no-banner -o docs/demo-results
+    python scripts/build_site.py
+
+Scores on the page are read from docs/demo-results/*.json; nothing is typed by hand.
+
+Built by Aryaveer Mankotia (https://github.com/Aryaveer009)
+"""
+
+from __future__ import annotations
+
+import json
+from html import escape
+from pathlib import Path
+
+DOCS = Path(__file__).resolve().parent.parent / "docs"
+RESULTS = DOCS / "demo-results"
+
+
+def load(which: str) -> dict:
+    return json.loads((RESULTS / f"demo-{which}.json").read_text(encoding="utf-8"))
+
+
+def card(which: str, title: str, blurb: str) -> str:
+    d = load(which)
+    score = "n/a" if d["score"] is None else f"{d['score']:.1f}"
+    tone = "good" if (d["score"] or 0) >= 80 else ("warn" if (d["score"] or 0) >= 50 else "bad")
+    return f"""
+    <a class="card {tone}" href="demo-results/demo-{which}.html">
+      <span class="grade">{escape(d["grade"])}</span>
+      <h2>{escape(title)}</h2>
+      <p class="score">{score}<small> / 100</small></p>
+      <p>{d["passed"]} of {d["total"]} attacks resisted, {d["failed"]} succeeded</p>
+      <p class="blurb">{escape(blurb)}</p>
+      <span class="cta">Open the live report →</span>
+    </a>"""
+
+
+PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PromptShield: live demo reports</title>
+<meta name="description" content="Interactive sample reports from PromptShield, an open-source security testing CLI for LLM apps. Built by Aryaveer Mankotia.">
+<style>
+:root{{--bg:#f4f6fb;--card:#fff;--ink:#111827;--muted:#5b6475;--line:#e3e7ef;--good:#16a34a;--warn:#d97706;--bad:#dc2626}}
+@media (prefers-color-scheme:dark){{:root{{--bg:#0b1020;--card:#131a2e;--ink:#e8ecf6;--muted:#98a2b8;--line:#243050}}}}
+*{{box-sizing:border-box}}
+body{{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}}
+header{{background:linear-gradient(120deg,#1e1b4b,#312e81 50%,#0e7490);color:#fff;padding:48px 20px 72px;text-align:center}}
+header h1{{margin:0;font-size:40px}} header p{{margin:8px auto 0;max-width:640px;color:#c7d2fe}}
+main{{max-width:900px;margin:-40px auto 0;padding:0 20px 40px}}
+.grid{{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
+.card{{position:relative;display:block;background:var(--card);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:16px;padding:22px;color:inherit;text-decoration:none;box-shadow:0 2px 6px rgba(15,23,42,.06);transition:transform .15s}}
+.card:hover{{transform:translateY(-3px)}}
+.card.good{{--c:var(--good)}} .card.warn{{--c:var(--warn)}} .card.bad{{--c:var(--bad)}}
+.card h2{{margin:0 0 4px;font-size:20px}} .card p{{margin:6px 0}}
+.score{{font-size:44px;font-weight:800;color:var(--c);line-height:1.1}} .score small{{font-size:16px;color:var(--muted);font-weight:500}}
+.grade{{position:absolute;top:18px;right:20px;font-size:32px;font-weight:800;color:var(--c)}}
+.blurb{{color:var(--muted);font-size:14px}} .cta{{display:inline-block;margin-top:8px;font-weight:600;color:#4f46e5}}
+.note{{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-top:22px;font-size:14px;color:var(--muted)}}
+.note b{{color:var(--ink)}}
+.links{{margin-top:22px;text-align:center}} .links a{{color:#4f46e5;margin:0 10px;font-weight:600}}
+footer{{text-align:center;color:var(--muted);font-size:14px;padding:24px 20px 40px}} footer a{{color:var(--ink);font-weight:600}}
+</style>
+</head>
+<body>
+<header>
+  <h1>PromptShield</h1>
+  <p>Open-source security testing for LLM apps. These are real, interactive reports from the bundled demo scan: one vulnerable chatbot, one hardened.</p>
+</header>
+<main>
+  <div class="grid">{cards}
+  </div>
+  <div class="note">
+    <b>Read this honestly:</b> the demo bots are deterministic simulators, not real LLMs, so these scores show how the
+    scanner reacts to vulnerable versus defended behaviour. They are not a benchmark of any real model. PromptShield only
+    attacks targets you own: it refuses to run without <code>--i-own-this-target</code>.
+  </div>
+  <p class="links">
+    <a href="https://github.com/Aryaveer009/promptshield">Source &amp; install on GitHub</a>
+    <a href="https://genai.owasp.org/llm-top-10/">OWASP Top 10 for LLM Apps</a>
+  </p>
+</main>
+<footer>Built by <a href="https://github.com/Aryaveer009">Aryaveer Mankotia</a></footer>
+</body>
+</html>
+"""
+
+
+def main() -> None:
+    cards = card(
+        "vulnerable",
+        "Vulnerable demo bot",
+        "No defences: obeys injected instructions, leaks its prompt, runs tools unchecked.",
+    ) + card(
+        "hardened",
+        "Hardened demo bot",
+        "Input filter, document sanitiser, tool gate and output filter, with a few known gaps.",
+    )
+    (DOCS / "index.html").write_text(PAGE.format(cards=cards), encoding="utf-8")
+    (DOCS / ".nojekyll").write_text("", encoding="utf-8")
+    print("wrote docs/index.html")
+
+
+if __name__ == "__main__":
+    main()

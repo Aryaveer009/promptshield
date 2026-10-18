@@ -11,7 +11,7 @@
 
 **An open-source CLI that runs a battery of attacks against an LLM chatbot or RAG app *you own* and produces a pass/fail security report mapped to the OWASP Top 10 for LLM Applications.**
 
-[Quick start](#-quick-start) · [How it works](#-architecture) · [Demo results](#-before--after-the-real-numbers) · [Add an attack](#-add-your-own-attack) · [Limitations](#-honest-limitations)
+[**Live demo reports**](https://aryaveer009.github.io/promptshield/) · [Quick start](#-quick-start) · [How it works](#-architecture) · [Demo results](#-before--after-the-real-numbers) · [Add an attack](#-add-your-own-attack) · [Limitations](#-honest-limitations)
 
 </div>
 
@@ -66,7 +66,7 @@ These come from actually running `promptshield demo` (saved in [`docs/demo-resul
 | Insecure output handling | 11.8 (1/7) | 88.2 (6/7) |
 <!-- END:demo-table -->
 
-Open [`docs/demo-results/demo-vulnerable.html`](docs/demo-results/demo-vulnerable.html) and [`demo-hardened.html`](docs/demo-results/demo-hardened.html) in a browser to see the full reports.
+**▶ [Open the live reports](https://aryaveer009.github.io/promptshield/)** (vulnerable and hardened, fully interactive, no install). The same files are in [`docs/demo-results/`](docs/demo-results).
 
 **Read these numbers honestly:**
 
@@ -237,6 +237,7 @@ mypy
 python scripts/generate_banner.py                       # regenerate assets/banner.svg
 promptshield demo --no-banner -o docs/demo-results      # re-run the demo
 python scripts/update_readme.py                         # refresh the numbers above from that run
+python scripts/build_site.py                            # rebuild the GitHub Pages landing page (docs/index.html)
 ```
 
 CI (GitHub Actions) runs lint, type-checking and the test-suite on Python 3.11-3.13 and smoke-tests the demo scan. No API keys are needed anywhere in the repo.
