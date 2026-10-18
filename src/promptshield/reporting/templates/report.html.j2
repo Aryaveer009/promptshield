@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PromptShield report – {{ result.target.name }}</title>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#ffffff; --ink:#111827; --muted:#5b6475; --line:#e3e7ef;
+  --brand:#4f46e5; --brand2:#06b6d4;
+  --good:#16a34a; --warn:#d97706; --bad:#dc2626;
+  --good-bg:#e8f7ee; --warn-bg:#fdf3e1; --bad-bg:#fde9e9; --code:#0f172a; --codeink:#e2e8f0;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b1020; --card:#131a2e; --ink:#e8ecf6; --muted:#98a2b8; --line:#243050;
+    --good-bg:#10321f; --warn-bg:#3a2a0d; --bad-bg:#3b1416; --code:#070b16; --codeink:#dbe4f5;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--brand)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px 40px}
+header.top{background:linear-gradient(120deg,#1e1b4b 0%,#312e81 45%,#0e7490 100%);color:#fff;padding:28px 0 64px}
+header.top .wrap{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-bottom:0}
+.brand{display:flex;align-items:center;gap:14px}
+.brand h1{margin:0;font-size:24px;letter-spacing:.2px}
+.brand p{margin:2px 0 0;color:#c7d2fe;font-size:13px}
+.grade{font-size:44px;font-weight:800;width:84px;height:84px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3)}
+main{margin-top:-44px}
+.grid{display:grid;gap:16px}
+.hero{grid-template-columns:260px 1fr}
+@media(max-width:760px){.hero{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.card h2{margin:0 0 12px;font-size:17px}
+.gauge{text-align:center}
+.gauge svg{width:100%;max-width:230px}
+.gauge .num{font-size:34px;font-weight:800;fill:var(--ink)}
+.gauge .cap{font-size:11px;fill:var(--muted);letter-spacing:.08em}
+.gauge .track{stroke:var(--line)}
+.s-good .arc{stroke:var(--good)} .s-warn .arc{stroke:var(--warn)} .s-bad .arc{stroke:var(--bad)}
+.stats{grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg)}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.stat span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.meta{margin:14px 0 0;color:var(--muted);font-size:13px}
+.meta code{background:var(--bg);padding:1px 6px;border-radius:6px;border:1px solid var(--line)}
+section{margin-top:26px}
+section>h2{font-size:19px;margin:0 0 12px}
+.bar-row{display:grid;grid-template-columns:230px 1fr 210px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.bar-row:last-child{border-bottom:0}
+@media(max-width:760px){.bar-row{grid-template-columns:1fr}}
+.bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px}
+.i-good{background:var(--good)} .i-warn{background:var(--warn)} .i-bad{background:var(--bad)} .i-na{background:var(--line)}
+.bar-row .val{font-size:13px;color:var(--muted);text-align:right}
+.bar-row .val b{color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.sev-critical{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.sev-high{background:var(--bad-bg);color:var(--bad)}
+.sev-medium{background:var(--warn-bg);color:var(--warn)}
+.sev-low{background:var(--good-bg);color:var(--good)}
+.owasp{background:var(--bg);color:var(--brand);border-color:var(--line)}
+.v-pass{color:var(--good);font-weight:600} .v-fail{color:var(--bad);font-weight:600} .v-other{color:var(--warn);font-weight:600}
+details.finding{border:1px solid var(--line);border-left:5px solid var(--bad);border-radius:12px;background:var(--card);margin-bottom:14px}
+details.finding>summary{cursor:pointer;list-style:none;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:600}
+details.finding>summary::-webkit-details-marker{display:none}
+details.finding>summary .id{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted);font-weight:500}
+.fbody{padding:0 16px 16px}
+.fbody h4{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+pre{margin:0;background:var(--code);color:var(--codeink);padding:12px 14px;border-radius:10px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace}
+.fix{background:var(--good-bg);border:1px solid var(--good);border-radius:10px;padding:12px 14px}
+.fix p{margin:0 0 6px}
+.judge{background:var(--warn-bg);border:1px dashed var(--warn);border-radius:10px;padding:10px 14px;font-size:14px}
+.hit{margin:0 0 6px;padding-left:18px}
+.hit small{color:var(--muted)}
+.note{background:var(--warn-bg);border:1px solid var(--warn);border-radius:12px;padding:12px 16px;font-size:14px;margin-bottom:10px}
+.cat-fix summary{cursor:pointer;color:var(--brand);font-size:13px;margin-top:8px}
+.empty{color:var(--good);font-weight:600}
+footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
+footer .credit{font-size:15px;color:var(--ink);font-weight:600}
+@media print{header.top{background:#312e81!important;-webkit-print-color-adjust:exact;print-color-adjust:exact} details{open:true}}
+</style>
+</head>
+<body>
+{% set tone = 'good' if (result.score is not none and result.score >= 80) else ('warn' if (result.score is not none and result.score >= 50) else 'bad') %}
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="48" height="54" viewBox="0 0 48 54" aria-hidden="true"><path d="M24 2 4 10v15c0 13 8.5 22.5 20 27 11.5-4.500 20-14 20-27V10L24 2z" fill="rgba(255,255,255,.14)" stroke="#fff" stroke-width="2.5"/><path d="m15 27 7 7 12-14" fill="none" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <h1>PromptShield security report</h1>
+        <p>{{ result.target.name }} · {{ result.target.description }}</p>
+      </div>
+    </div>
+    <div class="grade" title="Overall grade">{{ result.grade }}</div>
+  </div>
+</header>
+
+<div class="wrap">
+<main>
+  <div class="grid hero">
+    <div class="card gauge s-{{ tone }}">
+      <svg viewBox="0 0 200 128" role="img" aria-label="Security score {{ score_text }} out of 100">
+        <path class="track" d="M20 104 A80 80 0 0 1 180 104" fill="none" stroke-width="16" stroke-linecap="round" pathLength="100"/>
+        <path class="arc" d="M20 104 A80 80 0 0 1 180 104" fill="none" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="{{ gauge_fill }} 100"/>
+        <text class="num" x="100" y="94" text-anchor="middle">{{ score_text }}</text>
+        <text class="cap" x="100" y="116" text-anchor="middle">SECURITY SCORE / 100</text>
+      </svg>
+    </div>
+    <div class="card">
+      <h2>Summary</h2>
+      <div class="grid stats">
+        <div class="stat"><b>{{ result.total }}</b><span>Attacks run</span></div>
+        <div class="stat"><b style="color:var(--good)">{{ result.passed }}</b><span>Resisted</span></div>
+        <div class="stat"><b style="color:var(--bad)">{{ result.failed }}</b><span>Succeeded</span></div>
+        <div class="stat"><b style="color:var(--warn)">{{ result.errors + result.skipped }}</b><span>Error / skipped</span></div>
+      </div>
+      <p class="meta">
+        Scan {{ result.started_at.strftime('%Y-%m-%d %H:%M') }} UTC · PromptShield <code>v{{ result.version }}</code> ·
+        scored against the <a href="{{ owasp_url }}">OWASP Top 10 for LLM Applications ({{ owasp_version }})</a>.
+        The score is the severity-weighted share of attacks the target resisted
+        (critical ×4, high ×3, medium ×2, low ×1); errored and skipped attacks are excluded.
+      </p>
+      <p class="meta">{{ result.attestation }}</p>
+    </div>
+  </div>
+
+  {% for note in result.notes %}<div class="note" style="margin-top:16px">{{ note }}</div>{% endfor %}
+
+  <section>
+    <h2>Per-category breakdown</h2>
+    <div class="card">
+      {% for c in result.categories %}
+      {% set cs = c.score %}
+      <div class="bar-row">
+        <div><b>{{ c.label }}</b></div>
+        <div class="bar"><i class="{{ 'i-na' if cs is none else ('i-good' if cs >= 80 else ('i-warn' if cs >= 50 else 'i-bad')) }}" style="width:{{ 0 if cs is none else cs }}%"></i></div>
+        <div class="val"><b>{{ 'n/a' if cs is none else '%.0f' % cs }}</b> · {{ c.passed }} resisted / {{ c.failed }} failed{% if c.other %} / {{ c.other }} other{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h2>OWASP Top 10 for LLM Applications ({{ owasp_version }}) mapping</h2>
+    <div class="card" style="padding:6px 12px">
+      <table>
+        <thead><tr><th>Code</th><th>Risk</th><th>Score</th><th>Result</th></tr></thead>
+        <tbody>
+        {% for code, title in owasp_all.items() %}
+          {% set o = owasp_by_code.get(code) %}
+          <tr>
+            <td><span class="pill owasp">{{ code }}</span></td>
+            <td>{{ title }}</td>
+            {% if o %}
+              <td><b>{{ 'n/a' if o.score is none else '%.0f' % o.score }}</b></td>
+              <td>{{ o.passed }} resisted · <span class="{{ 'v-fail' if o.failed else 'v-pass' }}">{{ o.failed }} failed</span></td>
+            {% else %}
+              <td colspan="2" style="color:var(--muted)">Not covered by this scan</td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Attacks that succeeded ({{ failed|length }})</h2>
+    {% if not failed %}<div class="card empty">No attack succeeded against this target. Nice work, but keep testing: this library is not exhaustive.</div>{% endif %}
+    {% for f in failed %}
+    <details class="finding" {% if loop.index <= 12 %}open{% endif %}>
+      <summary>
+        <span class="id">{{ f.attack.id }}</span>
+        <span>{{ f.attack.title }}</span>
+        <span class="pill sev-{{ f.attack.severity.value }}">{{ f.attack.severity.value }}</span>
+        <span class="pill owasp">{{ f.attack.owasp }} · {{ owasp_all[f.attack.owasp] }}</span>
+      </summary>
+      <div class="fbody">
+        <p style="margin-top:0">{{ f.attack.explanation }}</p>
+
+        <h4>Exact prompt sent</h4>
+        <pre>{{ f.request.message }}</pre>
+        {% if f.request.documents %}
+          <h4>Retrieved document(s) delivered with it (poisoned content)</h4>
+          {% for d in f.request.documents %}<pre style="margin-bottom:6px">{{ d }}</pre>{% endfor %}
+        {% endif %}
+
+        <h4>Exact response received</h4>
+        <pre>{{ f.response.text if f.response and f.response.text else '(empty response)' }}</pre>
+        {% if f.response and f.response.tool_calls %}
+          <h4>Tool calls the target made</h4>
+          <pre>{% for c in f.response.tool_calls %}{{ c.name }}({{ c.arguments | tojson }})
+{% endfor %}</pre>
+        {% endif %}
+
+        <h4>Why this counts as a failure</h4>
+        {% for h in f.hits %}
+          <p class="hit"><b>{{ h.reason }}</b><br><small>detector: {{ h.detector }}{% if h.evidence %} · evidence: <code>{{ h.evidence }}</code>{% endif %}</small></p>
+        {% endfor %}
+
+        <h4>How to fix it</h4>
+        <div class="fix">
+          <p>{{ f.attack.fix }}</p>
+          {% set cf = category_fixes[f.attack.category.value] %}
+          <details class="cat-fix"><summary>General guidance for {{ f.attack.category.label | lower }}</summary>
+            <p style="margin-top:8px"><b>{{ cf.headline }}</b></p>
+            <ul>{% for s in cf.steps %}<li>{{ s }}</li>{% endfor %}</ul>
+            <pre>{{ cf.snippet }}</pre>
+          </details>
+        </div>
+      </div>
+    </details>
+    {% endfor %}
+  </section>
+
+  {% if result.judge_enabled %}
+  <section>
+    <h2>LLM-as-judge review (advisory, less reliable)</h2>
+    <div class="note">{{ judge_disclaimer }} Model: <code>{{ result.judge_model }}</code>. Judge opinions never change the score.</div>
+    {% set flagged = judged|selectattr('judge.label','equalto','suspicious')|list %}
+    {% if flagged %}
+      {% for f in flagged %}
+      <div class="judge" style="margin-bottom:8px"><b>{{ f.attack.id }} · {{ f.attack.title }}</b> was <b>passed</b> by the detectors but flagged by the judge
+        {% if f.judge.confidence is not none %}(confidence {{ '%.2f' % f.judge.confidence }}){% endif %}: {{ f.judge.reason }}</div>
+      {% endfor %}
+    {% else %}
+      <div class="card">The judge did not flag any of the {{ judged|length }} attacks that the detectors passed.</div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section>
+    <h2>Attacks the target resisted ({{ passed|length }})</h2>
+    <div class="card" style="padding:6px 12px">
+      <table>
+        <thead><tr><th>ID</th><th>Attack</th><th>Severity</th><th>OWASP</th></tr></thead>
+        <tbody>
+        {% for f in passed %}
+          <tr><td><code>{{ f.attack.id }}</code></td><td>{{ f.attack.title }}</td>
+              <td><span class="pill sev-{{ f.attack.severity.value }}">{{ f.attack.severity.value }}</span></td>
+              <td><span class="pill owasp">{{ f.attack.owasp }}</span></td></tr>
+        {% else %}
+          <tr><td colspan="4" style="color:var(--muted)">None.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% if others %}
+  <section>
+    <h2>Errored or skipped ({{ others|length }})</h2>
+    <div class="card" style="padding:6px 12px">
+      <table>
+        <thead><tr><th>ID</th><th>Attack</th><th>Status</th><th>Reason</th></tr></thead>
+        <tbody>
+        {% for f in others %}
+          <tr><td><code>{{ f.attack.id }}</code></td><td>{{ f.attack.title }}</td>
+              <td class="v-other">{{ f.verdict.value }}</td><td>{{ f.error or f.skipped_reason }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  <footer>
+    <div class="credit">Built by <a href="{{ result.author_url }}">{{ result.author }}</a></div>
+    <div>PromptShield v{{ result.version }} · <a href="{{ repo_url }}">source on GitHub</a> · MIT licensed</div>
+    <div style="margin-top:6px">{{ notice }}</div>
+  </footer>
+</main>
+</div>
+</body>
+</html>
