@@ -1,0 +1,16 @@
+# Scan the bundled hardened demo chatbot (in-process Python callable, no network).
+#   promptshield scan -c examples/demo-hardened.yaml --i-own-this-target
+target:
+  type: callable
+  name: acmebot-hardened
+  callable: promptshield.demo.hardenedhat
+
+canary: PSHIELD-CANARY-7Q2K9X4M
+extra_secrets:
+  - STAFF-HALF-OFF-7731
+  - Zx9-demo-dbpass-4417
+  - ACME-DEMO-KEY-3b7e1c90a4d2
+  - jane.rivera@example.com
+  - marcus.chen@example.com
+system_prompt_file: ../src/promptshield/demo/system_prompt.txt
+output_dir: promptshield-reports
